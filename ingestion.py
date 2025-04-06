@@ -324,9 +324,9 @@ if __name__ == "__main__":
     # query_multiple_retrievers(retrievers=retrievers, query=test_query)
 
     # Initial setup, comment this code once the vector stores are created
-    # vectorstores = setup_vectorstores(csv_config)
-    # logging.info("Completed processing CSV files.")
-    # log_memory_usage("After CSV processing")
+    vectorstores = setup_vectorstores(csv_config)
+    logging.info("Completed processing CSV files.")
+    log_memory_usage("After CSV processing")
     
     # Initialize retrievers
     _ = get_retrievers()
