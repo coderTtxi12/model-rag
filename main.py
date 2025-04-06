@@ -5,6 +5,7 @@ import psutil
 
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
+from fastapi.middleware.cors import CORSMiddleware
 
 load_dotenv()
 
@@ -27,6 +28,14 @@ def log_memory_usage(stage: str) -> None:
 # Create a FastAPI instance
 api = FastAPI(title="RAG API", version="1.0")
 
+# Add CORS middleware
+api.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],  # Your frontend URL
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Define request schema
 class QuestionRequest(BaseModel):
