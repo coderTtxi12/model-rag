@@ -3,10 +3,12 @@ import os
 import logging
 import psutil
 
-load_dotenv()
-from pprint import pprint
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
 
-from graph.graph import app
+load_dotenv()
+
+from graph.graph import app as graph_app
 
 # Configure logging
 logging.basicConfig(
@@ -22,23 +24,37 @@ def log_memory_usage(stage: str) -> None:
     logging.info(f"[{stage}] Memory usage: {mem_mb:.2f} MB")
 
 
-question = "What are the main issues with the model?"
+# Create a FastAPI instance
+api = FastAPI(title="RAG API", version="1.0")
+
+
+# Define request schema
+class QuestionRequest(BaseModel):
+    question: str
+
+
+@api.post("/generate")
+async def generate_response(request: QuestionRequest):
+    try:
+        logging.info("Running the app")
+        log_memory_usage("Before invocation")
+
+        # Invoke the graph application using the question from the API request
+        result = graph_app.invoke(input={"question": request.question})
+        logging.info(f"App result: {result}")
+
+        # Extract the generated documents from the result
+        generation = result.get("generation", "N/A")
+        logging.info(f"Generated documents: {generation}")
+
+        log_memory_usage("After invocation")
+        return generation
+    except Exception as e:
+        logging.error("Error during generation: %s", e)
+        raise HTTPException(status_code=500, detail="Error generating response")
 
 
 if __name__ == "__main__":
+    import uvicorn
 
-    # initial_state = {
-    #     "question": question1,
-    #     "documents": None,
-    #     "web_search": False,
-    #     "generation": "",
-    # }
-
-    # print(app.invoke(input=initial_state))
-    logging.info("Running the app")
-    result = app.invoke(input={"question": question})
-    logging.info(f"App result: {result}")
-
-    # Log the generated documents from the result
-    generation = result.get("generation", "N/A")
-    logging.info(f"Generated documents: {generation}")
+    uvicorn.run(api, host="127.0.0.1", port=8000)
