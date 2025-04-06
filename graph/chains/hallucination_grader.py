@@ -3,8 +3,9 @@ from pydantic import BaseModel, Field
 from langchain_core.runnables import RunnableSequence
 from langchain_openai import ChatOpenAI
 
-llm = ChatOpenAI(temperature=0)
-
+llm = ChatOpenAI(
+    model="o3-mini",
+)
 
 class GradeHallucinations(BaseModel):
     """Binary score for hallucination present in generation answer."""

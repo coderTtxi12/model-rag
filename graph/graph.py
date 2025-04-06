@@ -71,7 +71,7 @@ def grade_generation_grounded_in_documents_and_question(state: GraphState) -> st
     else:
         logging.warning("ASSESSMENT: Generation contains hallucinations - retrying")
         log_memory_usage("End grading - hallucination detected")
-        return "not answerable"
+        return "hallucination"
 
 
 # Initialize the graph
@@ -103,9 +103,9 @@ workflow.add_conditional_edges(
     GENERATE,
     grade_generation_grounded_in_documents_and_question,
     {
-        "not supported": GENERATE,
+        "not useful": GENERATE,
         "useful": END,
-        "not answerable": GENERATE,
+        "hallucination": GENERATE,
     },
 )
 

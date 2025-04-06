@@ -12,7 +12,9 @@ class GradeAnswer(BaseModel):
     )
 
 
-llm = ChatOpenAI(temperature=0)
+llm = ChatOpenAI(
+    model="o3-mini",
+)
 
 structured_llm_grader = llm.with_structured_output(GradeAnswer)
 
