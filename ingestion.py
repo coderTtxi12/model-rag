@@ -219,22 +219,88 @@ def query_and_display_results(
         print("-" * 50)
 
 
-def query_multiple_retrievers(retrievers: dict, query: str):
+# def query_multiple_retrievers(retrievers: dict, query: str):
+#     """
+#     Execute the same query across multiple retrievers and display results.
+
+#     Args:
+#         retrievers (dict): Dictionary of retrievers with their collection names
+#         query (str): Query string to search for
+#     """
+#     print(f"\n{'='*20} Executing Query Across All Collections {'='*20}")
+#     print(f"Query: {query}\n")
+
+#     for collection_name, retriever in retrievers.items():
+#         print(f"\n{'='*20} Collection: {collection_name} {'='*20}")
+#         query_and_display_results(
+#             retriever=retriever, query=query, collection_name=collection_name
+#         )
+
+
+def query_multiple_retrievers(retrievers: dict, query: str) -> list:
     """
-    Execute the same query across multiple retrievers and display results.
+    Execute the same query across multiple retrievers and return combined results.
 
     Args:
         retrievers (dict): Dictionary of retrievers with their collection names
         query (str): Query string to search for
+
+    Returns:
+        list: Combined list of documents from all retrievers
     """
     print(f"\n{'='*20} Executing Query Across All Collections {'='*20}")
     print(f"Query: {query}\n")
 
+    all_documents = []
+
     for collection_name, retriever in retrievers.items():
         print(f"\n{'='*20} Collection: {collection_name} {'='*20}")
+        # Get documents from current retriever
+        results = retriever.get_relevant_documents(query)
+
+        # Add collection information to metadata
+        for doc in results:
+            doc.metadata["collection"] = collection_name
+
+        # Add documents to combined list
+        all_documents.extend(results)
+
+        # Display results for debugging/monitoring
         query_and_display_results(
             retriever=retriever, query=query, collection_name=collection_name
         )
+
+    return all_documents
+
+
+_global_retrievers = None
+
+def get_retrievers():
+    """Get the initialized retrievers."""
+    global _global_retrievers
+    if _global_retrievers is None:
+        # Configuration
+        csv_config = {
+            "./assets/file_classifier_entries_upd.csv": "rag-advanced-file1",
+            "./assets/file_classifier_insights.csv": "rag-advanced-file2",
+            "./assets/file_classifier.csv": "rag-advanced-file3",
+        }
+        _global_retrievers = setup_retrievers(list(csv_config.values()))
+    return _global_retrievers
+
+def query_all_retrievers(query: str) -> list:
+    """
+    Query all retrievers with the given query string.
+    
+    Args:
+        query (str): The query to search for
+        
+    Returns:
+        list: Combined list of relevant documents
+    """
+    retrievers = get_retrievers()
+    return query_multiple_retrievers(retrievers=retrievers, query=query)
+
 
 
 if __name__ == "__main__":
@@ -246,13 +312,21 @@ if __name__ == "__main__":
     }
 
     # Setup vector stores, comment this code once the vector stores are created
+    # vectorstores = setup_vectorstores(csv_config)
+    # logging.info("Completed processing CSV files.")
+    # log_memory_usage("After CSV processing")
+
+    # Setup retrievers
+    # retrievers = setup_retrievers(list(csv_config.values()))
+
+    # Example query across all retrievers
+    # test_query = "Give me some evaluated inputs where the model got it wrong"
+    # query_multiple_retrievers(retrievers=retrievers, query=test_query)
+
+    # Initial setup, comment this code once the vector stores are created
     vectorstores = setup_vectorstores(csv_config)
     logging.info("Completed processing CSV files.")
     log_memory_usage("After CSV processing")
-
-    # Setup retrievers
-    retrievers = setup_retrievers(list(csv_config.values()))
-
-    # Example query across all retrievers
-    test_query = "Give me some evaluated inputs where the model got it wrong"
-    query_multiple_retrievers(retrievers=retrievers, query=test_query)
+    
+    # Initialize retrievers
+    _ = get_retrievers()
